@@ -5,6 +5,7 @@
  	- Make the game more difficult as time passes or as aliens get closer
  	- Make the aliens shoot
  	- Make the player shoot
+ 	- Track the score
  	- Create a 3rd sprite for the aliens and insert it in the game
 */
 (function() {
@@ -66,8 +67,8 @@ function Game() {
 					// update horizontal position
 					alien.position.x += speed * direction;
 
-					// when going right, update leftMost & rightMost to the biggest
-					// update to the smallest when going left
+					// when going right, update leftMost & rightMost to the biggest.
+					// when going left update to the smallest 
 					if (direction > 0) {
 						if (alien.position.x + alien.size.width > aliens.rightMost) {
 							aliens.rightMost = alien.position.x + alien.size.width;
@@ -87,7 +88,7 @@ function Game() {
 				}
 			}
 
-			// move the player if key is pressed
+			// move the player if a movement key is pressed
 			if (input.left && !input.right && player.position.x > 0) {
 				player.position.x -= 2;
 			} else if (input.right && !input.left &&
