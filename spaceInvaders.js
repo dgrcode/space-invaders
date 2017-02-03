@@ -224,16 +224,33 @@ function Game() {
 			}
 		}
 
-
 		// generate the player
 		player = Player(20, size.height - Player().size.height - 20);
 
 		tick();
+
+		// Measure real FPS
+		setInterval(() => {
+			console.log("FPS: " + (currentFrame - lastCheckedFrame));
+			lastCheckedFrame = currentFrame;
+		}, 1000);
 	};
 
 	game.end = () => {
 		// finish the game
 		playing = false;
+
+		// remove all the timeOuts and timeIntervals
+		let lastTimeout = setTimeout(() => {});
+		for (let i = 0; i <= lastTimeout; i++) {
+			clearTimeout(i);
+		}
+
+		// remove all the key listeners
+			// TODO
+
+		// set all variables to their initial values
+			// TODO
 	};
 
 	return game;
@@ -346,6 +363,10 @@ const UserInput = () => {
 				state.shoot = true;
 				break;
 
+			case 27: // 'esc'
+				state.end = true;
+				break;
+
 			default:
 				// do nothing
 		}
@@ -367,6 +388,10 @@ const UserInput = () => {
 				state.shoot = false;
 				break;
 
+			case 27: // 'esc'
+				state.end = false;
+				break;
+
 			default:
 				// do nothing
 		}
@@ -376,6 +401,7 @@ const UserInput = () => {
 		left: false,
 		right: false,
 		shoot: false,
+		end: false,
 	}
 
 	return state;
