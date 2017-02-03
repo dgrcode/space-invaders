@@ -12,18 +12,20 @@
 
 function Game() {
 	/** Game params **/
-	let fps = 60;
-	let alienMargin = 10; // space between each alien
-	let maxAliensPerRow = 10;
-	let waitFramesToMove = 60; // initial movements each 60 frames
-	let speed = 5; // horizontal speed
-	let vJump = 5; // vertical jump each time the aliens go down
-	let moveLimit = 0.01; // % of the screen where the aliens don't enter
+	const fps = 60;
+	const alienMargin = 10; // space between each alien
+	const maxAliensPerRow = 10;
+	const speed = 5; // horizontal speed
+	const vJump = 20; // vertical jump each time the aliens go down
+	const moveLimit = 0.01; // % of the screen where the aliens don't enter
+	const framesDying = 20; // amounts of frames between being hit and disappearing
 
 	/** Inits **/
+	let realFps = 0;
+	let lastCheckedFrame = 0;
 	let playing = false;
 	let currentFrame = 0;
-	let aliens = []; // it has the array of aliens and two properties: rightMost and leftMost
+	let aliens = []; // it has the array of aliens and two properties: rightMostAlein and leftMostAlien
 	let direction = 1; // start going right. Left would be -1
 	let context = null;
 	let input = null;
@@ -140,8 +142,8 @@ function Game() {
 		let y = 0;
 		let x;
 		let newAlien;
-		aliens.leftMost = size.width; // initial value to be overwriten
-		aliens.rightMost = 0; // initial value to be overwriten
+		leftMostAlien = size.width; // initial value to be overwriten
+		rightMostAlein = 0; // initial value to be overwriten
 		for (let i = 0; i < fitVerticalAliens; i++) {
 			y += alien.size.height + alienMargin;
 			x = size.width * moveLimit - alien.size.width - alienMargin;
@@ -149,11 +151,11 @@ function Game() {
 				x += alien.size.width + alienMargin;
 				newAlien = Alien(x, y)
 				aliens.push(newAlien);
-				if (newAlien.position.x < aliens.leftMost) {
-					aliens.leftMost = newAlien.position.x;
+				if (newAlien.position.x < leftMostAlien) {
+					leftMostAlien = newAlien.position.x;
 				}
-				if (newAlien.position.x + alien.size.width > aliens.rightMost) {
-					aliens.rightMost = newAlien.position.x + alien.size.width;
+				if (newAlien.position.x + alien.size.width > rightMostAlein) {
+					rightMostAlein = newAlien.position.x + alien.size.width;
 				}
 
 			}
@@ -178,10 +180,14 @@ const Alien = (aX, aY) => {
 	let imgLoaded = 0;
 	const img1 = new Image();
 	const img2 = new Image();
+	const imgHit = new Image();
 	img1.src = './assets/alien1.png';
 	img1.onload = () => imgLoaded += 1;
 	img2.src = './assets/alien2.png';
 	img2.onload = () => imgLoaded += 1;
+	imgHit.src = './assets/alienhit.png';
+	imgHit.onload = () => imgLoaded += 1;
+
 
 	const sprites = [img1, img2];
 
@@ -202,7 +208,7 @@ const Alien = (aX, aY) => {
 	};
 
 	return alien;
-}
+};
 
 const Player = (pX, pY) => {
 	let imgLoaded = false;
