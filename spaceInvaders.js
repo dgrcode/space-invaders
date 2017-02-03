@@ -41,12 +41,20 @@ function Game() {
 	const win = () => {
 		// the player wins
 		game.end();
+		let text = "You win! :)";
+		context.fillStyle = "#99ffff";
+		textWidth = context.measureText(text).width;
+		context.fillText(text, textWidth, (size.height / 2));
 		console.log('Player wins!');
 	};
 
 	const lose = () => {
 		// the player loses
 		game.end();
+		let text = "You Lose! :(";
+		context.fillStyle = "#ff3333";
+		textWidth = context.measureText(text).width;
+		context.fillText(text, textWidth, (size.height / 2));
 		console.log('Player loses!');
 	};
 
@@ -59,9 +67,12 @@ function Game() {
 		if (input.end) {game.end()}
 
 		// Game logic - updates
+			// check if the user has won the game
+			if (aliens.length === 0) {
+				win();
+			}
 
 			// check if an alien must die
-
 			aliens = aliens.filter(alien => {
 				return !(alien.hit && currentFrame - alien.frameHit >= framesDying);
 			});
@@ -186,6 +197,8 @@ function Game() {
 		// start the game
 		playing = true;
 		context = ctx;
+		context.textAlign = "center";
+		context.font = "50px Arial";
 		size.width = ctx.canvas.width;
 		size.height = ctx.canvas.height;
 		input = UserInput();
