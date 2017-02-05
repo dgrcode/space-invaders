@@ -189,6 +189,16 @@ function Game() {
 			}
 	}
 
+	// *DEBUG
+	window.addEventListener('keydown', event => {
+		if (event.key == 'W') {
+			win();
+		} else if (event.key == 'L') {
+			lose();
+		}
+	});
+	// DEBUG*
+
 
 	/** Shared game functions **/
 	const game = {};
