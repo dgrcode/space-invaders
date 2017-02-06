@@ -6,6 +6,7 @@
  	- Make the aliens shoot
  	- Track the score
  	- Create a 3rd sprite for the aliens and insert it in the game
+ 	- Create an independent objet to load the assets, to improve te performance
 */
 (function() {
 
@@ -39,9 +40,9 @@ function Game() {
 	
 	/** Internal game functions **/
 	const win = () => {
-		// the player wins
+		// The player wins
 		game.end();
-		// draw the winning text
+		// Draw the winning text
 		let text = "You win! :)";
 		context.fillStyle = "#99ffff";
 		textWidth = context.measureText(text).width;
@@ -50,9 +51,9 @@ function Game() {
 	};
 
 	const lose = () => {
-		// the player loses
+		// The player loses
 		game.end();
-		// draw the winning text
+		// Draw the winning text
 		let text = "You Lose! :(";
 		context.fillStyle = "#ff3333";
 		textWidth = context.measureText(text).width;
@@ -61,7 +62,7 @@ function Game() {
 	};
 
 	const tick = () => {
-		// update to the next game frame
+		// Update to the next game frame
 		currentFrame++;
 
 		// End the game if user press 'Esc'
@@ -162,7 +163,7 @@ function Game() {
 			}
 
 			// create a playerBullet if the space key is pressed and there is no
-			// other bullet
+			// other playerBullet on the game
 			if (input.shoot && !playerBullet) {
 				playerBullet = PlayerBullet(
 						player.position.x + player.size.width / 2,
@@ -170,34 +171,40 @@ function Game() {
 			}
 
 		// Render
+			// draw everything black removing last frame
 			context.fillStyle = "#000000";
 			context.fillRect(0, 0, size.width, size.height);
+
+			// draw each alien
 			for (let alien of aliens) {
 				alien.render(context, currentFrame, waitFramesToMove);
 			}
 
+			// draw the player
 			if (player) {
 				player.render(context);
 			}
 
+			// draw the player's bullet
 			if (playerBullet) {
 				playerBullet.render(context);
 			}
 
-		// Call tick again
+		// Call tick again if the game is still going on
 			if (playing) {
 				setTimeout(tick, 1000/fps);
 			}
 	}
 
 	// *DEBUG
-	window.addEventListener('keydown', event => {
-		if (event.key == 'W') {
-			win();
-		} else if (event.key == 'L') {
-			lose();
-		}
-	});
+		window.addEventListener('keydown', event => {
+			// listeners added to simulate win() and lose()
+			if (event.key == 'W') {
+				win();
+			} else if (event.key == 'L') {
+				lose();
+			}
+		});
 	// DEBUG*
 
 
@@ -205,7 +212,7 @@ function Game() {
 	const game = {};
 
 	game.start = (ctx) => {
-		// start the game
+		// Initialize game variables
 		playing = true;
 		context = ctx;
 		context.textAlign = "center";
@@ -215,65 +222,68 @@ function Game() {
 		input = UserInput();
 
 
-		// generate the aliens
+		// Generate the aliens
 			// calculate how many aliens fit there horizontally
-		let alien = Alien(); // to avoid creating several closures
-		// The amount of aliens that fit is not exact. No problem
-		// fHA = floor(validWidth / (alienWidth+margin)) * 0.8 -> to allow 20%
-		// space for the aliens to move
-		let fitHorizontalAliens = Math.floor((
-			size.width*(1-2*moveLimit) / (alien.size.width + alienMargin)) * 0.8);
-		fitHorizontalAliens = Math.min(fitHorizontalAliens, maxAliensPerRow);
-		let fitVerticalAliens = 4;
+			let alien = Alien(); // to avoid creating several instances to get sizes
+			// The amount of aliens that fit is approximate. No problem
+			// fHA = floor(validWidth / (alienWidth+margin)) * 0.8 -> to allow 20%
+			// space for the aliens to move
+			let fitHorizontalAliens = Math.floor((
+				size.width*(1-2*moveLimit) / (alien.size.width + alienMargin)) * 0.8);
+			fitHorizontalAliens = Math.min(fitHorizontalAliens, maxAliensPerRow);
+			// define the amount of rows
+			let fitVerticalAliens = 4;
 
-		let y = 0;
-		let x;
-		let newAlien;
-		leftMostAlien = size.width; // initial value to be overwriten
-		rightMostAlein = 0; // initial value to be overwriten
-		for (let i = 0; i < fitVerticalAliens; i++) {
-			y += alien.size.height + alienMargin;
-			x = size.width * moveLimit - alien.size.width - alienMargin;
-			for (let j = 0; j < fitHorizontalAliens; j++) {
-				x += alien.size.width + alienMargin;
-				newAlien = Alien(x, y)
-				aliens.push(newAlien);
-				if (newAlien.position.x < leftMostAlien) {
-					leftMostAlien = newAlien.position.x;
+			let y = 0;
+			let x;
+			let newAlien;
+			leftMostAlien = size.width; // initial value to be overwritten
+			rightMostAlein = 0; // initial value to be overwriten
+			for (let i = 0; i < fitVerticalAliens; i++) {
+				// initialize x, y for row i
+				y += alien.size.height + alienMargin;
+				x = size.width * moveLimit - alien.size.width - alienMargin;
+				for (let j = 0; j < fitHorizontalAliens; j++) {
+					x += alien.size.width + alienMargin;
+					newAlien = Alien(x, y)
+					aliens.push(newAlien);
+					// check if the new alien changes current leftMost or rightMost
+					if (newAlien.position.x < leftMostAlien) {
+						leftMostAlien = newAlien.position.x;
+					}
+					if (newAlien.position.x + alien.size.width > rightMostAlein) {
+						rightMostAlein = newAlien.position.x + alien.size.width;
+					}
 				}
-				if (newAlien.position.x + alien.size.width > rightMostAlein) {
-					rightMostAlein = newAlien.position.x + alien.size.width;
-				}
-
 			}
-		}
 
-		// generate the player
-		player = Player(20, size.height - Player().size.height - 20);
+		// Generate the player
+			player = Player(20, size.height - Player().size.height - 20);
 
-		tick();
+		// Call the first tick starting the game
+			tick();
 
 		// Measure real FPS
-		setInterval(() => {
-			console.log("FPS: " + (currentFrame - lastCheckedFrame));
-			lastCheckedFrame = currentFrame;
-		}, 1000);
+			setInterval(() => {
+				console.log("FPS: " + (currentFrame - lastCheckedFrame));
+				lastCheckedFrame = currentFrame;
+			}, 1000);
 	};
 
 	game.end = () => {
-		// finish the game
+		// Finish the game
 		playing = false;
 
-		// remove all the timeOuts and timeIntervals
+		// Remove all the timeOuts and timeIntervals
 		let lastTimeout = setTimeout(() => {});
 		for (let i = 0; i <= lastTimeout; i++) {
 			clearTimeout(i);
 		}
 
-		// remove all the key listeners
+		// Remove all the key listeners
 			// TODO
 
-		// set all variables to their initial values
+		// Set all variables to their initial values
 			// TODO
 	};
 
@@ -281,7 +291,13 @@ function Game() {
 };
 
 const Alien = (aX, aY) => {
-	let imgLoaded = 0;
+	/* 
+	 * I could probably delegate the img loading to another objet, and it would
+	 * probalby improve the performace as each asset would be loaded just once,
+	 * instead of once per alien. At most there are 40 aliens, so it is not a big
+	 * deal. It is another point that I could change.
+	 */
+	let imgLoaded = 0; // counter of loaded images
 	const img1 = new Image();
 	const img2 = new Image();
 	const imgHit = new Image();
@@ -301,9 +317,9 @@ const Alien = (aX, aY) => {
 
 	alien.size = {width: 22, height: 16};
 
-	alien.hit = false;
+	alien.hit = false; // to change behavior if the alien has bit hit
 
-	alien.frameHit = null;
+	alien.frameHit = null; // stores the exact frame when the alien was hit
 
 	let img;
 	alien.render = (context, currentFrame, waitFramesToMove) => {
@@ -323,6 +339,12 @@ const Alien = (aX, aY) => {
 };
 
 const Player = (pX, pY) => {
+	/* 
+	 * I could probably delegate the img loading to another objet, and it would
+	 * probalby improve the performace as each asset would be loaded just once,
+	 * instead of once per alien. At most there are 40 aliens, so it is not a big
+	 * deal. It is another point that I could change.
+	 */
 	let imgLoaded = false;
 	const img = new Image();
 	img.src = './assets/player.png';
@@ -341,6 +363,10 @@ const Player = (pX, pY) => {
 		}
 	};
 
+	/*
+	// Right now this is handled by the game, not the player. This is because
+	// I have defined playerSpeed as a game parameter, and I cannot access it
+	// from inside the player object. I prefer to have it as a game parameter.
 	player.moveRight = () => {
 		player.position.x += 1;
 	}
@@ -348,6 +374,7 @@ const Player = (pX, pY) => {
 	player.moveLeft = () => {
 		player.position.x -= 1;
 	}
+	*/
 
 	return player;
 };
