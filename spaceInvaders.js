@@ -14,7 +14,8 @@ function Game() {
 	const fps = 60;
 	const alienMargin = 10; // space between each alien
 	const maxAliensPerRow = 10;
-	const speed = 5; // horizontal speed
+	const speed = 5; // horizontal speed of aliens
+	const playerSpeed = 2; // horizontal speed of player
 	const vJump = 20; // vertical jump each time the aliens go down
 	const moveLimit = 0.01; // % of the screen where the aliens don't enter
 	const framesDying = 20; // amounts of frames between being hit and disappearing
@@ -24,7 +25,9 @@ function Game() {
 	let lastCheckedFrame = 0;
 	let playing = false;
 	let currentFrame = 0;
-	let aliens = []; // it has the array of aliens and two properties: rightMostAlein and leftMostAlien
+	let aliens = []; // it has the array of aliens still alive
+	let rightMostAlein = 0; // Store the rightmost position. To know when to turn
+	let leftMostAlien = 0; // Store the leftmost position. To know when to turn
 	let direction = 1; // start going right. Left would be -1
 	let waitFramesToMove = 10; // initial movements each 60 frames
 	let context = null;
@@ -33,14 +36,12 @@ function Game() {
 	let player = null;
 	let playerBullet = null;
 	let lastBulletY = null;
-	let rightMostAlein = 0;
-	let leftMostAlien = 0;
-
-
+	
 	/** Internal game functions **/
 	const win = () => {
 		// the player wins
 		game.end();
+		// draw the winning text
 		let text = "You win! :)";
 		context.fillStyle = "#99ffff";
 		textWidth = context.measureText(text).width;
@@ -51,6 +52,7 @@ function Game() {
 	const lose = () => {
 		// the player loses
 		game.end();
+		// draw the winning text
 		let text = "You Lose! :(";
 		context.fillStyle = "#ff3333";
 		textWidth = context.measureText(text).width;
@@ -60,14 +62,13 @@ function Game() {
 
 	const tick = () => {
 		// update to the next game frame
-		//console.log('-> ticks; direction: ' + direction);
 		currentFrame++;
 
 		// End the game if user press 'Esc'
 		if (input.end) {game.end()}
 
 		// Game logic - updates
-			// check if the user has won the game
+			// check if there are aliens remaining
 			if (aliens.length === 0) {
 				win();
 			}
@@ -78,7 +79,7 @@ function Game() {
 			});
 			
 
-			// updates the position each waitFramesToMove frames
+			// updates the position each `waitFramesToMove` frames
 			if (currentFrame % waitFramesToMove == 0) {
 				// move all aliens horizontally
 				for (let alien of aliens) {
@@ -108,8 +109,8 @@ function Game() {
 					
 				}
 
-				// if the pack of aliens reach the last 10% of the canvas (both sides),
-				// they jump down
+				// if the pack of aliens reach the last `moveLimit` of the canvas (both
+				// sides), they jump down and change direction
 				if ((rightMostAlein >= size.width * (1-moveLimit) && direction > 0) ||
 						(leftMostAlien <= size.width * moveLimit && direction < 0)) {
 					for (let alien of aliens) {
@@ -121,7 +122,7 @@ function Game() {
 				}
 			}
 
-			// Move the bullet if there's one
+			// Move the player's bullet if there's one
 			if (playerBullet) {
 				// store last position to check hits during last step
 				lastBulletY = playerBullet.position.y;
@@ -154,10 +155,10 @@ function Game() {
 
 			// move the player if a movement key is pressed
 			if (input.left && !input.right && player.position.x > 0) {
-				player.position.x -= 2;
+				player.position.x -= playerSpeed;
 			} else if (input.right && !input.left &&
 					player.position.x + player.size.width < size.width) {
-				player.position.x += 2;
+				player.position.x += playerSpeed;
 			}
 
 			// create a playerBullet if the space key is pressed and there is no
